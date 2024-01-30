@@ -1,8 +1,8 @@
 import Image from "next/image";
-import { Card, CardContent } from "@/app/_components/ui/card";
+import { Card, CardContent } from "../../_components/ui/card";
 import { Barbershop } from "@prisma/client";
-import { Button } from "@/app/_components/ui/button";
-import { Badge } from "@/app/_components/ui/badge";
+import { Button } from "../../_components/ui/button";
+import { Badge } from "../../_components/ui/badge";
 import { StarIcon } from "lucide-react";
 
 interface BarbershopItemProps {
