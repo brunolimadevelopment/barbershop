@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/_components/ui/card";
+import { Card, CardContent } from "@/app/_components/ui/card";
 import { Service } from "@prisma/client"
 import Image from "next/image"
 
