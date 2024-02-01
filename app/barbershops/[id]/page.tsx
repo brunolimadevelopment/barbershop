@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { db } from "@/_lib/prisma";
-import { Button } from "@/_components/ui/button";
-import { ChevronLeftIcon, MapPinIcon, MenuIcon, StarIcon } from "lucide-react";
+import BarbershopInfo from "./_components/barbershop-info";
+import ServiceItem from "./_components/service-item";
+
 
 interface BarbershopDetailsPageProps {
     params: {
@@ -18,6 +18,9 @@ const BarbershopDetailsPage = async ({ params }: BarbershopDetailsPageProps) => 
     const barbershop = await db.barbershop.findUnique({
         where: {
             id: params.id
+        },
+        include: {
+            services: true
         }
     })
 
@@ -27,28 +30,13 @@ const BarbershopDetailsPage = async ({ params }: BarbershopDetailsPageProps) => 
         return null;
     }
 
-    return (  
-        <div>
-            <div className="h-[250px] w-full relative">
-                <Button className="z-50 absolute top-4 left-4" variant="outline" size="icon">
-                    <ChevronLeftIcon />
-                </Button>
-                <Button className="z-50 absolute top-4 right-4" variant="outline" size="icon">
-                    <MenuIcon />
-                </Button>
-                <Image src={barbershop.imageUrl} fill alt={barbershop.name} style={{ objectFit: "cover", }} className="opacity-75"/>
-            </div>
-
-            <div className="px-5 pt-3 pb-6 border-b border-solid border-secondary">
-                <h1 className="text-xl font-bold">{barbershop.name}</h1>
-                <div className="flex items-center gap-1 mt-2">
-                    <MapPinIcon className="stroke-primary" size={18} />
-                    <p className="text-sm">{barbershop.address}</p>
-                </div>
-                <div className="flex items-center gap-1 mt-2">
-                    <StarIcon className="stroke-primary" size={18} />
-                    <p className="text-sm">5,0 (899 avaliações)</p>
-                </div>
+    return ( 
+        <div> 
+            <BarbershopInfo barbershop={barbershop} />
+            <div className="px-5 flex flex-col gap-4 py-6">
+                {barbershop.services.map((service) => (
+                    <ServiceItem key={service.id} service={service} />
+                ))}
             </div>
         </div>
     );
