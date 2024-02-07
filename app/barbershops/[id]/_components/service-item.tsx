@@ -3,17 +3,18 @@ import { Button } from "@/app/_components/ui/button";
 import { Calendar } from "@/app/_components/ui/calendar";
 import { Card, CardContent } from "@/app/_components/ui/card";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/app/_components/ui/sheet";
-import { Barbershop, Service } from "@prisma/client"
+import { Barbershop, Booking, Service } from "@prisma/client"
 import { ptBR } from "date-fns/locale";
 import { signIn, useSession } from "next-auth/react";
 import Image from "next/image"
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { generateDayTimeList } from "../_helpers/hours";
 import { format, setHours, setMinutes } from "date-fns";
 import { saveBooking } from "../_actions/save-booking";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getDayBookings } from "../_actions/get-day-bookings";
 
 interface ServiceItemProps {
     barbershop: Barbershop;
@@ -23,23 +24,43 @@ interface ServiceItemProps {
 const ServiceItem = ({ service, barbershop, isAuthenticated }: ServiceItemProps) => {
     const router = useRouter()
     const { data } = useSession(); // next Auth
+
     const [date, setDate] = useState<Date | undefined>(undefined)
     const [hour, setHour] = useState<string | undefined>()
     const [submitIsLoading, setSubmitIsLoading ] = useState(false)
     const [sheetIsOpen, setSheetIsOpen] = useState(false)
+    const [dayBookings, setDayBookings] = useState<Booking[]>([]) // lista de data
+    
+    useEffect(() => {
+
+        if(!date) {
+            return
+        }
+        
+        const refreshAvailableHours = async () => {
+            const _dayBookings = await getDayBookings(barbershop.id, date);
+            
+            setDayBookings(_dayBookings)
+        }
+
+        refreshAvailableHours();
+
+        // sempre que date mudar executa a função acima: refreshAv...
+    }, [date, barbershop.id])
 
     const handleDateClick = (date: Date | undefined) => {
         setDate(date);
         setHour(undefined)
     }
+
     const handleHourClick = (time: string) => {
         setHour(time)
     }
 
     const handleBookingClick = () => {
-        // if (!isAuthenticated) {
-        //     return signIn("google");
-        // }
+        if (!isAuthenticated) {
+            return signIn("google");
+        }
     }
 
     const handleBookingSubmit = async () => {
@@ -86,10 +107,36 @@ const ServiceItem = ({ service, barbershop, isAuthenticated }: ServiceItemProps)
         }
     }
 
+    // lista de horários
     const timeList = useMemo(() => {
         // com o useMemo, garatimos que essa função generateDay... só será executada caso o [date] tenha alguma alteração.
-        return date ? generateDayTimeList(date) : [];
-    }, [date]);
+        
+        if(!date) {
+            return []
+        }
+        
+        return generateDayTimeList(date).filter(time => {
+            // se houver alguma reserva em "dayBookings" com a hora e minutas igual a time, não incluir
+            const timeHour = Number(time.split(":")[0])
+            const timeMinutes = Number(time.split(":")[1])
+
+            const booking = dayBookings.find((booking) => {
+                const bookingHour = booking.date.getHours();
+                const bookingMinutes = booking.date.getMinutes();
+
+                return bookingHour === timeHour && bookingMinutes === timeMinutes;
+            })
+
+            if(!booking) {
+                return true
+            }
+
+            return false
+
+
+        })
+
+    }, [date, dayBookings]);
 
     return ( 
         <Card>
