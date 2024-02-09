@@ -132,8 +132,6 @@ const ServiceItem = ({ service, barbershop, isAuthenticated }: ServiceItemProps)
             }
 
             return false
-
-
         })
 
     }, [date, dayBookings]);
