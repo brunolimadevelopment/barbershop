@@ -1,11 +1,17 @@
-import { Prisma, Booking } from "@prisma/client";
+"use client"
+import { Prisma } from "@prisma/client";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Card, CardContent } from "./ui/card";
-import { format, isFuture, isPast } from "date-fns";
+import { format, isFuture } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 import Image from "next/image";
+import { Button } from "./ui/button";
+import { cancelBooking } from "../_actions/cancel-booking";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 
 interface BookItemProps {
@@ -18,7 +24,22 @@ interface BookItemProps {
 }
 
 const BookingItem = ({ booking }: BookItemProps) => {
+    const [isDeleteLoading,setIsDeleteLoading] = useState(false)
+
     const isBookingConfirmed = isFuture(booking.date);
+
+    const handleCancelClick = async () => {
+        setIsDeleteLoading(true)
+
+        try {
+            await cancelBooking(booking.id)
+            toast.success("Reserva cancelada com sucesso!")
+        } catch (error) {
+            console.error(error)
+        } finally{
+            setIsDeleteLoading(false)
+        }
+    }
 
     return ( 
         <Sheet>
@@ -83,11 +104,54 @@ const BookingItem = ({ booking }: BookItemProps) => {
                     </div>
                     <Badge variant={
                         isBookingConfirmed ? "default" : "secondary"
-                    } className="w-fit mt-3 mb-6">{
+                    } className="w-fit my-3">{
                         isBookingConfirmed ? "Confirmado" : "Finalizado"
                     }</Badge>
+
+                    <Card>
+                        <CardContent className="p-3 gap-3 flex flex-col">
+                            <div className="flex justify-between">
+                                <h2 className="font-bold">{booking.service.name}</h2>
+                                <h3 className="font-bold text-sm">
+                                    {" "}
+                                    {Intl.NumberFormat("pt-BR", {
+                                        style: "currency",
+                                        currency: "BRL",
+                                    }).format(Number(booking.service.price))}
+                                </h3>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                                <h3 className="text-gray-400 text-sm">Data</h3>
+                                <h4 className="text-sm">{format(booking.date, "dd 'de' MMMM", { locale: ptBR, })}</h4>
+                            </div>
+                        
+
+                        
+                            <div className="flex justify-between">
+                                <h3 className="text-gray-400 text-sm">Horário</h3>
+                                <h4 className="text-sm">{format(booking.date, 'hh:mm')}</h4>
+                            </div>
+                            
+                                               
+                            <div className="flex justify-between">
+                                <h3 className="text-gray-400 text-sm">Barbearia</h3>
+                                <h4 className="text-sm">{booking.barbershop.name}</h4>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <SheetFooter className="flex-row gap-3 mt-6">
+                        <SheetClose asChild>
+                            <Button className="w-full" variant="secondary">
+                                Voltar
+                            </Button>
+                        </SheetClose>
+                        <Button onClick={handleCancelClick} disabled={!isBookingConfirmed || isDeleteLoading} className="w-full" variant="destructive">
+                            {isDeleteLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Cancelar Reserva
+                        </Button>
+                    </SheetFooter>
                 </div>
-                
             </SheetContent>
         </Sheet>
      );
