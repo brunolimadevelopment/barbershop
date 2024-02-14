@@ -5,7 +5,7 @@ import { Input } from "../../_components/ui/input";
 import { SearchIcon } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/app/_components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/app/_components/ui/form";
 import { useRouter } from "next/navigation";
 
 // Campos obrigatórios
